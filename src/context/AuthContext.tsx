@@ -9,7 +9,7 @@ const mockUsers: User[] = [
     id: '1',
     username: 'admin',
     email: 'admin@example.com',
-    password: 'password123', // In a real app, this would be hashed
+    password: 'admin123', // In a real app, this would be hashed
     role: 'admin'
   },
   {
