@@ -13,11 +13,12 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useData } from '../../context/DataContext';
 import { Service } from '../../models/types';
 import Navigation from '../../components/Navigation';
+import { createService, updateService } from "./../../services/servicoService";
 
 const ServiceForm: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
-  const { addService, updateService, getServiceById } = useData();
+  const { addService,  getServiceById } = useData();
   const isEditMode = !!id;
   
   const [formData, setFormData] = useState<Omit<Service, 'id'>>({
@@ -74,7 +75,7 @@ const ServiceForm: React.FC = () => {
     setFormData(prev => ({
       ...prev,
       [name]: name === 'price' || name === 'estimatedHours' 
-        ? parseFloat(value) || 0 
+        ? parseFloat(value) || null 
         : value
     }));
   };
@@ -85,9 +86,11 @@ const ServiceForm: React.FC = () => {
     if (!validate()) return;
     
     if (isEditMode && id) {
-      updateService({ id, ...formData });
+      // updateService({ id, ...formData });
+      updateService(id, formData.name, formData.price, formData.description, formData.estimatedHours);
     } else {
-      addService(formData);
+      createService(formData.name, formData.price, formData.description, formData.estimatedHours);
+      // addService(formData);
     }
     
     navigate('/services');
@@ -141,8 +144,8 @@ const ServiceForm: React.FC = () => {
                   value={formData.price}
                   onChange={handleChange}
                   InputProps={{
-                    startAdornment: <InputAdornment position="start">$</InputAdornment>,
-                    inputProps: { min: 0, step: 0.01 }
+                    startAdornment: <InputAdornment position="start">R$</InputAdornment>,
+                    inputProps: { step: 0.01 }
                   }}
                   error={!!errors.price}
                   helperText={errors.price}
@@ -159,7 +162,7 @@ const ServiceForm: React.FC = () => {
                   value={formData.estimatedHours}
                   onChange={handleChange}
                   InputProps={{
-                    inputProps: { min: 0, step: 0.1 }
+                    inputProps: { step: 0.1 }
                   }}
                   error={!!errors.estimatedHours}
                   helperText={errors.estimatedHours}

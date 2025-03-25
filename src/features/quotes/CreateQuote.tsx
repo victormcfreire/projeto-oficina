@@ -24,11 +24,14 @@ import { useData } from '../../context/DataContext';
 import { Quote, QuoteItem } from '../../models/types';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
+import { listServices } from "./../../services/servicoService";
+
 
 const CreateQuote = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { customers, services, addQuote } = useData();
+  const { customers,  addQuote } = useData();
+  const [ services, setServicos] = useState<any[]>([]);
   
   // Get customerId from URL if present
   const queryParams = new URLSearchParams(location.search);
@@ -42,6 +45,10 @@ const CreateQuote = () => {
   // Get today's date in YYYY-MM-DD format
   const today = new Date().toISOString().split('T')[0];
   const [date, setDate] = useState(today);
+
+  useEffect(() => {
+      loadServices();
+    }, []);
 
   // Calculate the total
   const calculateTotal = () => {
@@ -57,6 +64,11 @@ const CreateQuote = () => {
       setItems([...items, { serviceId: services[0].id, quantity: 1 }]);
     }
   };
+
+  const loadServices = async () => {
+      const lista = await listServices();
+      setServicos(lista || []);
+    };
 
   // Handle item change
   const handleItemChange = (index: number, field: 'serviceId' | 'quantity', value: string | number) => {

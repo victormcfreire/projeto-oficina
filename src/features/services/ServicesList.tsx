@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   Box, 
   Typography, 
@@ -21,13 +21,17 @@ import {
 import { Link } from 'react-router-dom';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { useData } from '../../context/DataContext';
 import Navigation from '../../components/Navigation';
+import { listServices, deleteService } from "./../../services/servicoService";
 
 const ServicesList: React.FC = () => {
-  const { services, deleteService } = useData();
+  const [ services, setServicos] = useState<any[]>([]);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [serviceToDelete, setServiceToDelete] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadServices();
+  }, []);
 
   const handleDeleteClick = (id: string) => {
     setServiceToDelete(id);
@@ -36,7 +40,7 @@ const ServicesList: React.FC = () => {
 
   const confirmDelete = () => {
     if (serviceToDelete) {
-      deleteService(serviceToDelete);
+      deleteSelectedService(serviceToDelete);
       setDeleteDialogOpen(false);
       setServiceToDelete(null);
     }
@@ -47,6 +51,16 @@ const ServicesList: React.FC = () => {
       style: 'currency',
       currency: 'BRL'
     }).format(amount);
+  };
+
+  const loadServices = async () => {
+    const lista = await listServices();
+    setServicos(lista || []);
+  };
+
+  const deleteSelectedService = async (service: any) => {
+    await deleteService(service.id);
+    loadServices();
   };
 
   return (
