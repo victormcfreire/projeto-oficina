@@ -86,14 +86,12 @@ const ServiceForm: React.FC = () => {
     if (!validate()) return;
     
     if (isEditMode && id) {
-      // updateService({ id, ...formData });
       updateService(id, formData.name, formData.price, formData.description, formData.estimatedHours);
     } else {
       createService(formData.name, formData.price, formData.description, formData.estimatedHours);
-      // addService(formData);
     }
     
-    navigate('/services');
+    navigate('/services', { state: { refresh: true } });
   };
   
   return (

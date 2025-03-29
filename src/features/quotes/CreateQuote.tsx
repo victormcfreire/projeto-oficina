@@ -1,77 +1,36 @@
-
 import React, { useState, useEffect } from 'react';
-import { 
-  Box, 
-  Typography, 
-  TextField, 
-  Button, 
-  Paper, 
-  Grid, 
-  FormControl, 
-  InputLabel,
-  MenuItem,
-  Select,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  IconButton,
-} from '@mui/material';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { useData } from '../../context/DataContext';
-import { Quote, QuoteItem } from '../../models/types';
-import DeleteIcon from '@mui/icons-material/Delete';
-import AddIcon from '@mui/icons-material/Add';
+import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { listServices } from "./../../services/servicoService";
 import { listCustomers } from "./../../services/clienteService";
-import { createQuote } from '../../services/orcamentoService';
+import { createQuote, getQuoteById, updateQuote } from '../../services/orcamentoService';
+import { Box, Typography, TextField, Button, Paper, Grid, FormControl, InputLabel, MenuItem, Select, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, IconButton } from '@mui/material';
+import DeleteIcon from '@mui/icons-material/Delete';
+import AddIcon from '@mui/icons-material/Add';
 import Navigation from '../../components/Navigation';
-
+import { Customer, QuoteItem, Service } from '../../models/types';
 
 const CreateQuote = () => {
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const location = useLocation();
-  const [ customers,  setCustomers ] = useState<any[]>([]);
-  const [ services, setServicos ] = useState<any[]>([]);
-  
-  // Get customerId from URL if present
-  const queryParams = new URLSearchParams(location.search);
-  const customerIdFromUrl = queryParams.get('customerId');
-  
-  const [customerId, setCustomerId] = useState(customerIdFromUrl || '');
+  const isEditMode = !!id;
+
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [services, setServices] = useState<Service[]>([]);
+  const [customerId, setCustomerId] = useState('');
   const [items, setItems] = useState<QuoteItem[]>([]);
   const [notes, setNotes] = useState('');
-  const [errors, setErrors] = useState<Record<string, string>>({});
-
-  // Get today's date in YYYY-MM-DD format
+  
   const today = new Date().toISOString().split('T')[0];
   const [date, setDate] = useState(today);
-
-  useEffect(() => {
-      loadServices();
-      loadCustomers();
-    }, []);
-
-  // Calculate the total
-  const calculateTotal = () => {
-    return items.reduce((total, item) => {
-      const service = services.find(s => s.id === item.serviceId);
-      return total + (service ? service.price * item.quantity : 0);
-    }, 0);
-  };
-
-  // Add a new item to the quote
   const addItem = () => {
     if (services.length > 0) {
-      setItems([...items, { serviceId: services[0].id, quantity: 1 }]);
+      setItems([...items, { servico: services[0], quantidade: 1 }]);
     }
   };
 
   const loadServices = async () => {
     const lista = await listServices();
-    setServicos(lista || []);
+    setServices(lista || []);
   };
 
   const loadCustomers = async () => {
@@ -79,58 +38,24 @@ const CreateQuote = () => {
     setCustomers(lista || []);
   };
 
-  // Handle item change
-  const handleItemChange = (index: number, field: 'serviceId' | 'quantity', value: string | number) => {
-    const newItems = [...items];
-    newItems[index] = { ...newItems[index], [field]: value };
-    setItems(newItems);
-  };
-
-  // Remove an item
-  const removeItem = (index: number) => {
-    const newItems = [...items];
-    newItems.splice(index, 1);
-    setItems(newItems);
-  };
-
-  // Validate the form
-  const validate = () => {
-    const newErrors: Record<string, string> = {};
-    
-    if (!customerId) newErrors.customerId = 'O campo cliente é obrigatório';
-    if (items.length === 0) newErrors.items = 'Informe pelo menos um serviço';
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  // Handle form submission
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!validate()) return;
-    
-    const newQuote: Omit<Quote, 'id'> = {
-      customerId,
-      date,
-      items,
-      notes,
-      status: 'rascunho',
-      total: calculateTotal(),
-    };
-    
-    createQuote(newQuote.customerId, newQuote.date, newQuote.items, newQuote.notes);
-    navigate('/quotes', { state: { refresh: true } });
-  };
-
-  // Add an initial item if there are none
-  useEffect(() => {
-    if (items.length === 0 && services.length > 0) {
-      addItem();
+  const loadQuote = async () => {
+    if (!id) return;
+    const quote = await getQuoteById(id);
+    if (quote) {
+      setDate(quote.date);
+      setCustomerId(quote.customerId);
+      setItems(quote.items);
+      setNotes(quote.notes);
     }
-  }, [services, items.length, addItem]);
+  };
 
-  // Format currency
+  const calculateTotal = () => {
+    return items.reduce((total, item) => {
+      const service = services.find(s => s.id === item.servico.id);
+      return total + (service ? service.price * item.quantidade : 0);
+    }, 0);
+  };
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
@@ -138,171 +63,132 @@ const CreateQuote = () => {
     }).format(amount);
   };
 
+  const handleItemChange = (index: number, field: 'service.id' | 'quantidade', value: string | number) => {
+    const newItems = [...items];
+    newItems[index] = { ...newItems[index], [field]: value };
+    setItems(newItems);
+  };
+
+  const removeItem = (index: number) => {
+    const newItems = [...items];
+    newItems.splice(index, 1);
+    setItems(newItems);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const quoteData = { customerId, date, items, notes, status: 'rascunho', total: calculateTotal() };
+
+    if (isEditMode && id) {
+      await updateQuote(id, quoteData.customerId, quoteData.date, quoteData.items, quoteData.notes, quoteData.status);
+    } else {
+      await createQuote(customerId, date, items, notes);
+    }
+
+    navigate('/quotes', { state: { refresh: true } });
+  };
+
+  useEffect(() => {
+    loadServices();
+    loadCustomers();
+    if (isEditMode) {
+      loadQuote();
+    } 
+  }, [isEditMode]);
+
+  useEffect(() => {
+    if (items.length === 0 && services.length > 0) {
+      addItem();
+    }
+  }, [items.length, addItem]); 
+
   return (
     <>
-      <Navigation/>
-      <Box sx={{p:3}}>
-        <Box>
-          <Typography variant="h4" component="h1" className="page-title">
-            Criar Novo Orçamento
-          </Typography>
-          
-          <Paper className="form-paper">
-            <form onSubmit={handleSubmit}>
-              <Grid container spacing={3}>
-                <Grid item xs={12} md={6}>
-                  <FormControl fullWidth error={!!errors.customerId}>
-                    <InputLabel id="customer-select-label">Cliente</InputLabel>
-                    <Select
-                      labelId="customer-select-label"
-                      
-                      value={customerId}
-                      label="Cliente"
-                      onChange={(e) => setCustomerId(e.target.value as string)}
-                    >
-                      {customers.map((customer) => (
-                        <MenuItem key={customer.id} value={customer.id}>
-                          {customer.name} - {customer.vehicle.year} {customer.vehicle.make} {customer.vehicle.model}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                    {errors.customerId && (
-                      <Typography color="error" variant="caption">
-                        {errors.customerId}
-                      </Typography>
-                    )}
-                  </FormControl>
-                </Grid>
-                
-                <Grid item xs={12} md={6}>
-                  <TextField
-                    fullWidth
-                    label="Data"
-                    type="date"
-                    value={date}
-                    onChange={(e) => setDate(e.target.value)}
-                    InputLabelProps={{
-                      shrink: true,
-                    }}
-                  />
-                </Grid>
-                
-                <Grid item xs={12}>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                    <Typography variant="h6">Serviços</Typography>
-                    <Button 
-                      startIcon={<AddIcon />} 
-                      onClick={addItem}
-                      variant="outlined"
-                      size="small"
-                    >
-                      Adicionar Serviço
-                    </Button>
-                  </Box>
-                  
-                  {errors.items && (
-                    <Typography color="error" variant="caption" sx={{ display: 'block', mb: 2 }}>
-                      {errors.items}
-                    </Typography>
-                  )}
-                  
-                  <TableContainer>
-                    <Table>
-                      <TableHead>
-                        <TableRow>
-                          <TableCell>Serviço</TableCell>
-                          <TableCell>Preço</TableCell>
-                          <TableCell>Quantidade</TableCell>
-                          <TableCell>Subtotal</TableCell>
-                          <TableCell>Ações</TableCell>
-                        </TableRow>
-                      </TableHead>
-                      <TableBody>
-                        {items.map((item, index) => {
-                          const service = services.find(s => s.id === item.serviceId);
-                          const price = service?.price || 0;
-                          const subtotal = price * item.quantity;
-                          
-                          return (
-                            <TableRow key={index}>
-                              <TableCell>
-                                <FormControl fullWidth size="small">
-                                  <Select
-                                    value={item.serviceId}
-                                    onChange={(e) => handleItemChange(index, 'serviceId', e.target.value)}
-                                  >
-                                    {services.map((service) => (
-                                      <MenuItem key={service.id} value={service.id}>
-                                        {service.name}
-                                      </MenuItem>
-                                    ))}
-                                  </Select>
-                                </FormControl>
-                              </TableCell>
-                              <TableCell>{formatCurrency(price)}</TableCell>
-                              <TableCell>
-                                <TextField
-                                  type="number"
-                                  InputProps={{ inputProps: { min: 1 } }}
-                                  value={item.quantity}
-                                  onChange={(e) => handleItemChange(index, 'quantity', parseInt(e.target.value) || 1)}
-                                  size="small"
-                                  sx={{ width: '80px' }}
-                                />
-                              </TableCell>
-                              <TableCell>{formatCurrency(subtotal)}</TableCell>
-                              <TableCell>
-                                <IconButton 
-                                  color="error" 
-                                  onClick={() => removeItem(index)}
-                                  disabled={items.length === 1}
-                                >
-                                  <DeleteIcon />
-                                </IconButton>
-                              </TableCell>
-                            </TableRow>
-                          );
-                        })}
-                      </TableBody>
-                    </Table>
-                  </TableContainer>
-                </Grid>
-                
-                <Grid item xs={12}>
-                  <TextField
-                    fullWidth
-                    label="Notas"
-                    multiline
-                    rows={4}
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                  />
-                </Grid>
-                
-                <Grid item xs={12}>
-                  <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
-                    <Typography variant="h6" sx={{ mr: 2 }}>
-                      Total: {formatCurrency(calculateTotal())}
-                    </Typography>
-                  </Box>
-                </Grid>
+      <Navigation />
+      <Box sx={{ p: 3 }}>
+        <Typography variant="h4" component="h1">
+          {isEditMode ? "Editar Orçamento" : "Criar Novo Orçamento"}
+        </Typography>
+        <Paper>
+          <form onSubmit={handleSubmit}>
+            <Grid container spacing={3}>
+              <Grid item xs={12} md={6}>
+                <FormControl fullWidth>
+                  <InputLabel>Cliente</InputLabel>
+                  <Select value={customerId} onChange={(e) => setCustomerId(e.target.value as string)}>
+                    {customers.map((customer) => (
+                      <MenuItem key={customer.id} value={customer.id}>
+                        {customer.name} - {customer.vehicle.year} {customer.vehicle.make} {customer.vehicle.model}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
               </Grid>
-              
-              <Box className="action-buttons">
-                <Button 
-                  variant="outlined" 
-                  onClick={() => navigate('/quotes')}
-                  sx={{ mr: 1 }}
-                >
-                  Cancelar
+              <Grid item xs={12} md={6}>
+                <TextField fullWidth label="Data" type="date" value={date} onChange={(e) => setDate(e.target.value)} InputLabelProps={{ shrink: true }} />
+              </Grid>
+              <Grid item xs={12}>
+                <Button startIcon={<AddIcon />} onClick={addItem} variant="outlined" size="small">
+                  Adicionar Serviço
                 </Button>
-                <Button type="submit" variant="contained">
-                  Criar Orçamento
-                </Button>
-              </Box>
-            </form>
-          </Paper>
-        </Box>
+                <TableContainer>
+                  <Table>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Serviço</TableCell>
+                        <TableCell>Preço</TableCell>
+                        <TableCell>Quantidade</TableCell>
+                        <TableCell>Subtotal</TableCell>
+                        <TableCell>Ações</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {items.map((item, index) => (
+                        <TableRow key={index}>
+                          <TableCell>
+                            <Select value={item.servico.id} onChange={(e) => handleItemChange(index, 'service.id', e.target.value)}>
+                              {services.map((service) => (
+                                <MenuItem key={service.id} value={service.id}>{service.name}</MenuItem>
+                              ))}
+                            </Select>
+                          </TableCell>
+                          <TableCell>{item.precoUnitario}</TableCell>
+                          <TableCell>
+                            <TextField type="number" value={item.quantidade} onChange={(e) => handleItemChange(index, 'quantidade', parseInt(e.target.value) || 1)} />
+                          </TableCell>
+                          <TableCell>{item.precoUnitario! * item.quantidade}</TableCell>
+                          <TableCell>
+                            <IconButton onClick={() => removeItem(index)}><DeleteIcon /></IconButton>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </Grid>
+              <Grid item xs={12}>
+               <TextField
+                 fullWidth
+                 label="Notas"
+                 multiline
+                 rows={4}
+                 value={notes}
+                 onChange={(e) => setNotes(e.target.value)}
+               />
+             </Grid>
+             
+             <Grid item xs={12}>
+               <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
+                 <Typography variant="h6" sx={{ mr: 2 }}>
+                   Total: {formatCurrency(calculateTotal())}
+                 </Typography>
+               </Box>
+             </Grid>
+            </Grid>
+            <Button variant="outlined" onClick={() => navigate('/quotes')}>Cancelar</Button>
+            <Button type="submit" variant="contained">{isEditMode ? "Salvar Alterações" : "Criar Orçamento"}</Button>
+          </form>
+        </Paper>
       </Box>
     </>
   );

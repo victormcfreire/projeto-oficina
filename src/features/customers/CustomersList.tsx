@@ -25,6 +25,7 @@ const CustomersList = () => {
 
   useEffect(() => {
     if (location.state?.refresh) {
+      setRefresh((prev) => !prev);
       loadCustomers();
       navigate(location.pathname, { replace: true, state: {} }); // Reseta o estado para evitar loops
     } else {

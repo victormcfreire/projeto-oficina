@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Typography,
@@ -10,14 +10,19 @@ import {
   ListItemText,
   Divider,
 } from "@mui/material";
-import { Link } from "react-router-dom";
-import { useData } from "../../context/DataContext";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { listCustomers } from "../../services/clienteService";
+import { listQuotes } from "../../services/orcamentoService";
 import { useAuth } from "../../context/AuthContext";
 import Navigation from "../../components/Navigation";
 
 const Dashboard: React.FC = () => {
-  const { customers, quotes } = useData();
+  const [ quotes, setQuotes ] = useState<any[]>([]);
+  const [ customers, setCustomers ] = useState<any[]>([]);
   const { user } = useAuth();
+  const [ refresh, setRefresh ] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
 
   const pendingQuotes = quotes.filter((quote) => quote.status === "pendente");
   const approvedQuotes = quotes.filter((quote) => quote.status === "aprovado");
@@ -25,6 +30,28 @@ const Dashboard: React.FC = () => {
   const totalRevenue = approvedQuotes.reduce((sum, quote) => {
     return sum + quote.total;
   }, 0);
+
+  useEffect(() => {
+    if (location.state?.refresh) {
+      loadCustomers();
+      loadQuotes();
+      navigate(location.pathname, { replace: true, state: {} }); // Reseta o estado para evitar loops
+    } else {
+      loadCustomers();
+      loadQuotes();
+    }
+
+  }, [refresh]);
+
+  const loadCustomers = async () => {
+    const lista = await listCustomers();
+    setCustomers(lista || []);
+  };
+
+  const loadQuotes = async () => {
+    const lista = await listQuotes();
+    setQuotes(lista || []);
+  };
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('pt-BR', {

@@ -16,14 +16,14 @@ export const createQuote = async (
 
   try {
     const servicosArray = await Promise.all(
-      servicos.map(async ({ serviceId, quantity }) => {
+      servicos.map(async ({ servico, quantidade }) => {
         const servicoQuery = new Parse.Query('Servico');
-        const servico = await servicoQuery.get(serviceId); // Buscar o serviço real
+        const servicoReal = await servicoQuery.get(servico.id); // Buscar o serviço real
         return {
-          servico: servico.toPointer(), // Criar um Pointer
-          quantity,
-          precoUnitario: servico.get('preco'),
-          subtotal: servico.get('preco') * quantity,
+          servico: servicoReal.toPointer(), // Criar um Pointer
+          quantidade,
+          precoUnitario: servicoReal.get('preco'),
+          subtotal: servicoReal.get('preco') * quantidade,
         };
       })
     );
@@ -89,10 +89,11 @@ export const getQuoteById = async (orcamentoId: string) => {
 
 export const updateQuote = async (
   id: string,
-  cliente: Customer,
+  clienteId: string,
   data: string,
   servicos: QuoteItem[],
-  notas: string
+  notas: string,
+  situacao: string,
 ) => {
   const query = new Parse.Query('Orcamento');
   try {
@@ -100,17 +101,17 @@ export const updateQuote = async (
 
     const Cliente = Parse.Object.extend('Cliente');
     const clientePointer = new Cliente();
-    clientePointer.id = cliente.id;
+    clientePointer.id = clienteId;
 
     const servicosArray = await Promise.all(
-      servicos.map(async ({ serviceId, quantity }) => {
+      servicos.map(async ({ servico, quantidade }) => {
         const servicoQuery = new Parse.Query('Servico');
-        const servico = await servicoQuery.get(serviceId); // Buscar o serviço real
+        const servicoReal = await servicoQuery.get(servico.id); // Buscar o serviço real
         return {
-          servico: servico.toPointer(), // Criar um Pointer
-          quantity,
-          precoUnitario: servico.get('preco'),
-          subtotal: servico.get('preco') * quantity,
+          servico: servicoReal.toPointer(), // Criar um Pointer
+          quantidade,
+          precoUnitario: servicoReal.get('preco'),
+          subtotal: servicoReal.get('preco') * quantidade,
         };
       })
     );
@@ -124,7 +125,8 @@ export const updateQuote = async (
     orcamento.set('data', data);
     orcamento.set('servicos', servicosArray);
     orcamento.set('total', valorTotal);
-    orcamento.set('situacao', 'rascunho');
+    orcamento.set('notas', notas);
+    orcamento.set('situacao', situacao);
 
     return await orcamento.save();
   } catch (erro) {

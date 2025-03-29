@@ -54,7 +54,9 @@ function App() {
                   <Route path="/customers/add" element={<CustomerForm />} />
                   <Route path="/customers/edit/:id" element={<CustomerForm />} />
                   <Route path="/quotes" element={<QuotesList />} />
+                  <Route path="/quotes/edit/:id" element={<CreateQuote />} />
                   <Route path="/quotes/create" element={<CreateQuote />} />
+                  <Route path="/quotes/create?customerId=:id" element={<CreateQuote />} />
                   <Route path="/services" element={<ServicesList />} />
                   <Route path="/services/new" element={<ServiceForm />} />
                   <Route path="/services/edit/:id" element={<ServiceForm />} />

@@ -18,7 +18,7 @@ import {
   DialogContentText,
   DialogTitle
 } from '@mui/material';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import Navigation from '../../components/Navigation';
@@ -28,10 +28,19 @@ const ServicesList: React.FC = () => {
   const [ services, setServicos] = useState<any[]>([]);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [serviceToDelete, setServiceToDelete] = useState<string | null>(null);
+  const [ refresh, setRefresh ] = useState(false);
+    const location = useLocation();
+    const navigate = useNavigate();
 
   useEffect(() => {
-    loadServices();
-  }, []);
+    if (location.state?.refresh) {
+      setRefresh((prev) => !prev);
+      loadServices();
+      navigate(location.pathname, { replace: true, state: {} });
+    } else {
+      loadServices();
+    }
+  }, [refresh]);
 
   const handleDeleteClick = (id: string) => {
     setServiceToDelete(id);

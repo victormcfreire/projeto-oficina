@@ -8,6 +8,7 @@ export interface Customer {
 }
 
 export interface Vehicle {
+  id: string;
   make: string;
   model: string;
   year: string;
@@ -24,8 +25,10 @@ export interface Service {
 }
 
 export interface QuoteItem {
-  serviceId: string;
-  quantity: number;
+  servico: Service;
+  quantidade: number;
+  precoUnitario?: number;
+  subTotal?: number;
 }
 
 export interface Quote {

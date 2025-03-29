@@ -22,8 +22,9 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useData } from '../../context/DataContext';
 import AddIcon from '@mui/icons-material/Add';
 import Navigation from '../../components/Navigation';
-import { listQuotes, deleteQuote } from '../../services/orcamentoService';
+import { listQuotes, deleteQuote, updateQuote } from '../../services/orcamentoService';
 import { getCustomerById } from '../../services/clienteService';
+import { Quote } from '../../models/types';
 
 const QuotesList = () => {
   const [ quotes, setQuotes ] = useState<any[]>([]);
@@ -55,6 +56,7 @@ const QuotesList = () => {
     };
 
     if (location.state?.refresh) {
+      setRefresh((prev) => !prev);
       loadData();
       navigate(location.pathname, { replace: true, state: {} });
     } else {
@@ -73,6 +75,18 @@ const QuotesList = () => {
     setDeleteDialogOpen(true);
   };
 
+  const handleApproveClick = async (quote: Quote) => {
+    if(quote.status === 'aprovado') return;
+    await updateQuote(quote.id, quote.customerId, quote.date, quote.items, quote.notes, 'aprovado');
+    loadQuotes();
+  };
+
+  const handlePendingClick = async (quote: Quote) => {
+    if(quote.status === 'pendente') return;
+    await updateQuote(quote.id, quote.customerId, quote.date, quote.items, quote.notes, 'pendente');
+    loadQuotes();
+  };
+
   const confirmDelete = () => {
     if (quoteToDelete) {
       deleteSelectedQuote(quoteToDelete);
@@ -81,8 +95,8 @@ const QuotesList = () => {
     }
   };
 
-  const deleteSelectedQuote = async (quote: any) => {
-      await deleteQuote(quote.id);
+  const deleteSelectedQuote = async (quote: string) => {
+      await deleteQuote(quote);
       loadQuotes();
     };
 
@@ -164,11 +178,25 @@ const QuotesList = () => {
                       <TableCell>
                         <Button 
                           component={Link} 
-                          to={`/quotes/${quote.id}`}
+                          to={`/quotes/edit/${quote.id}`}
                           size="small"
                           sx={{ mr: 1 }}
                         >
                           Visualizar
+                        </Button>
+                        <Button 
+                          size="small"
+                          color="success"
+                          onClick={() => handleApproveClick(quote)}
+                        >
+                          Aprovar
+                        </Button>
+                        <Button 
+                          size="small"
+                          color="warning"
+                          onClick={() => handlePendingClick(quote)}
+                        >
+                          Tornar Pendente
                         </Button>
                         <Button 
                           size="small"
