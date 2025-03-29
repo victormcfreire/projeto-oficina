@@ -14,7 +14,9 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
 const Login: React.FC = () => {
-  const { login, loading, error } = useAuth();
+
+  const [erro, setErro] = useState("");
+  const { loginUser } = useAuth();
   const navigate = useNavigate();
   
   const [formData, setFormData] = useState({
@@ -31,9 +33,14 @@ const Login: React.FC = () => {
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const success = await login(formData);
-    if (success) {
-      navigate('/dashboard');
+    try{
+      const success = await loginUser(formData.email, formData.password);
+      if (success) {
+        navigate('/dashboard');
+      }
+
+    } catch (err) {
+      setErro("Credenciais inválidas. Tente novamente.");
     }
   };
   
@@ -58,7 +65,7 @@ const Login: React.FC = () => {
           Login
         </Typography>
         
-        {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+        {erro && <Alert severity="error" sx={{ mb: 2 }}>{erro}</Alert>}
         
         <Box component="form" onSubmit={handleSubmit}>
           <TextField
@@ -90,9 +97,8 @@ const Login: React.FC = () => {
             fullWidth
             size="large"
             sx={{ mt: 3, mb: 2 }}
-            disabled={loading}
           >
-            {loading ? <CircularProgress size={24} /> : 'Login'}
+            Login
           </Button>
           
           <Typography textAlign="center">

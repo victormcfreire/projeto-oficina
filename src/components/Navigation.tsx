@@ -29,7 +29,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const Navigation: React.FC = () => {
-  const { user, logout } = useAuth();
+  const { user, logoutUser } = useAuth();
   const navigate = useNavigate();
 
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -45,7 +45,7 @@ const Navigation: React.FC = () => {
 
   const handleLogout = () => {
     handleClose();
-    logout();
+    logoutUser();
     navigate('/login');
   };
 

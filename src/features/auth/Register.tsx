@@ -6,17 +6,13 @@ import {
   TextField, 
   Button, 
   Paper,
-  Alert, 
-  CircularProgress,
+  Alert,
   Link as MuiLink
 } from '@mui/material';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
+import { registerUser } from '../../services/authService';
 
 const Register: React.FC = () => {
-  const { register, loading, error } = useAuth();
-  const navigate = useNavigate();
-  
   const [formData, setFormData] = useState({
     username: '',
     email: '',
@@ -24,6 +20,9 @@ const Register: React.FC = () => {
     confirmPassword: ''
   });
   
+  const [erro, setErro] = useState("");
+  const navigate = useNavigate();
+
   const [formErrors, setFormErrors] = useState({
     password: '',
     confirmPassword: ''
@@ -67,11 +66,11 @@ const Register: React.FC = () => {
     
     if (!validateForm()) return;
     
-    const success = await register({
-      username: formData.username,
-      email: formData.email,
-      password: formData.password
-    });
+    const success = await registerUser(
+      formData.email,
+      formData.password,
+      formData.username,
+    );
     
     if (success) {
       navigate('/dashboard');
@@ -99,7 +98,7 @@ const Register: React.FC = () => {
           Cadastrar
         </Typography>
         
-        {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+        {erro && <Alert severity="error" sx={{ mb: 2 }}>{erro}</Alert>}
         
         <Box component="form" onSubmit={handleSubmit}>
           <TextField
@@ -157,9 +156,8 @@ const Register: React.FC = () => {
             fullWidth
             size="large"
             sx={{ mt: 3, mb: 2 }}
-            disabled={loading}
           >
-            {loading ? <CircularProgress size={24} /> : 'Cadastrar'}
+            Cadastrar
           </Button>
           
           <Typography textAlign="center">
