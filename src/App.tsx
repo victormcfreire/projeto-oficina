@@ -19,6 +19,7 @@ import CreateQuote from './features/quotes/CreateQuote';
 // Placeholder components for services
 import ServicesList from './features/services/ServicesList'; // Placeholder
 import ServiceForm from './features/services/ServiceForm';     // Placeholder
+import Parse from './parseConfig';
 
 // Styles
 import './App.css';
