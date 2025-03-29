@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   Box, 
   Typography, 
@@ -12,78 +12,100 @@ import {
   TableHead, 
   TableRow 
 } from '@mui/material';
-import { Link } from 'react-router-dom';
-import { useData } from '../../context/DataContext';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import AddIcon from '@mui/icons-material/Add';
+import { listCustomers } from '../../services/clienteService';
+import Navigation from '../../components/Navigation';
 
 const CustomersList = () => {
-  const { customers } = useData();
+  const [ customers, setCustomers ] = useState<any[]>([]);
+  const [ refresh, setRefresh ] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (location.state?.refresh) {
+      loadCustomers();
+      navigate(location.pathname, { replace: true, state: {} }); // Reseta o estado para evitar loops
+    } else {
+      loadCustomers();
+    }
+
+  }, [refresh]);
+
+  const loadCustomers = async () => {
+    const lista = await listCustomers();
+    setCustomers(lista || []);
+  };
 
   return (
-    <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4" component="h1" className="page-title">
-          Customers
-        </Typography>
-        <Button 
-          variant="contained" 
-          component={Link} 
-          to="/customers/new"
-          startIcon={<AddIcon />}
-        >
-          Adicionar Cliente
-        </Button>
-      </Box>
+    <>
+      <Navigation />
+      <Box sx={{ p: 3 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+          <Typography variant="h4" component="h1" className="page-title">
+            Clientes
+          </Typography>
+          <Button 
+            variant="contained" 
+            component={Link} 
+            to="/customers/add"
+            startIcon={<AddIcon />}
+          >
+            Adicionar Cliente
+          </Button>
+        </Box>
 
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Nome</TableCell>
-              <TableCell>Email</TableCell>
-              <TableCell>Telefone</TableCell>
-              <TableCell>Veículo</TableCell>
-              <TableCell>Ações</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {customers.length === 0 ? (
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
               <TableRow>
-                <TableCell colSpan={5} align="center">Nenhum cliente encontrado</TableCell>
+                <TableCell>Nome</TableCell>
+                <TableCell>Email</TableCell>
+                <TableCell>Telefone</TableCell>
+                <TableCell>Veículo</TableCell>
+                <TableCell>Ações</TableCell>
               </TableRow>
-            ) : (
-              customers.map((customer) => (
-                <TableRow key={customer.id}>
-                  <TableCell>{customer.name}</TableCell>
-                  <TableCell>{customer.email}</TableCell>
-                  <TableCell>{customer.phone}</TableCell>
-                  <TableCell>
-                    {customer.vehicle.year} {customer.vehicle.make} {customer.vehicle.model}
-                  </TableCell>
-                  <TableCell>
-                    <Button 
-                      component={Link} 
-                      to={`/customers/${customer.id}`}
-                      size="small"
-                    >
-                      Editar
-                    </Button>
-                    <Button 
-                      component={Link} 
-                      to={`/quotes/new?customerId=${customer.id}`}
-                      size="small"
-                      color="primary"
-                    >
-                      Criar Orçamento
-                    </Button>
-                  </TableCell>
+            </TableHead>
+            <TableBody>
+              {customers.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={5} align="center">Nenhum cliente encontrado</TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
-    </Box>
+              ) : (
+                customers.map((customer) => (
+                  <TableRow key={customer.id}>
+                    <TableCell>{customer.name}</TableCell>
+                    <TableCell>{customer.email}</TableCell>
+                    <TableCell>{customer.phone}</TableCell>
+                    <TableCell>
+                      {customer.vehicle.year} {customer.vehicle.make} {customer.vehicle.model}
+                    </TableCell>
+                    <TableCell>
+                      <Button 
+                        component={Link} 
+                        to={`/customers/edit/${customer.id}`}
+                        size="small"
+                      >
+                        Editar
+                      </Button>
+                      <Button 
+                        component={Link} 
+                        to={`/quotes/create?customerId=${customer.id}`}
+                        size="small"
+                        color="primary"
+                      >
+                        Criar Orçamento
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Box>
+    </>
   );
 };
 
