@@ -63,3 +63,7 @@ export const getUserSession = () => {
   const userData = localStorage.getItem("user");
   return userData ? JSON.parse(userData) : null;
 };
+
+export const isAuthenticated = () => {
+  return !!Parse.User.current(); // Retorna true se o usuário estiver autenticado
+};

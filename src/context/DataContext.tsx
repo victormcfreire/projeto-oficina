@@ -161,7 +161,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
   const deleteService = (id: string): void => {
     // Check if service is used in any quotes
     const serviceInUse = quotes.some((quote) =>
-      quote.items.some((item) => item.serviceId === id),
+      quote.items.some((item) => item.servico.id === id),
     );
 
     if (serviceInUse) {

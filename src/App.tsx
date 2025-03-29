@@ -5,6 +5,7 @@ import { AuthProvider } from './context/AuthContext';
 import { DataProvider } from './context/DataContext';
 import PrivateRoute from './components/PrivateRoute';
 
+import Parse from './parseConfig';
 // Auth
 import Login from './features/auth/Login';
 import Register from './features/auth/Register';
@@ -19,7 +20,7 @@ import CreateQuote from './features/quotes/CreateQuote';
 // Placeholder components for services
 import ServicesList from './features/services/ServicesList'; // Placeholder
 import ServiceForm from './features/services/ServiceForm';     // Placeholder
-import Parse from './parseConfig';
+import { isAuthenticated } from './services/authService';
 
 // Styles
 import './App.css';
@@ -64,8 +65,8 @@ function App() {
                 </Route>
 
                 {/* Redirects */}
-                <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                <Route path="*" element={<Navigate to="/login" />} />
+                <Route path="/" element={<Navigate to={isAuthenticated() ? "/dashboard" : "/login"} />} />
+                <Route path="*" element={<Navigate to={isAuthenticated() ? "/dashboard" : "/login"} />} />
               </Routes>
             </Box>
           </Router>
