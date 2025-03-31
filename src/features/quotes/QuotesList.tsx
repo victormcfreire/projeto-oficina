@@ -160,7 +160,7 @@ const QuotesList = () => {
                   <TableCell colSpan={6} align="center">Nenhum orçamento encontrado </TableCell>
                 </TableRow>
               ) : (
-                quotes.map((quote) => {
+                quotes.toReversed().map((quote) => {
                   const customer = customers[quote.customerId];
                   return (
                     <TableRow key={quote.id}>

@@ -71,7 +71,7 @@ const CustomersList = () => {
                   <TableCell colSpan={5} align="center">Nenhum cliente encontrado</TableCell>
                 </TableRow>
               ) : (
-                customers.map((customer) => (
+                customers.toReversed().map((customer) => (
                   <TableRow key={customer.id}>
                     <TableCell>{customer.name}</TableCell>
                     <TableCell>{customer.email}</TableCell>

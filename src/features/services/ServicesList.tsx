@@ -109,7 +109,7 @@ const ServicesList: React.FC = () => {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  services.map((service) => (
+                  services.toReversed().map((service) => (
                     <TableRow key={service.id}>
                       <TableCell>{service.name}</TableCell>
                       <TableCell>{service.description}</TableCell>

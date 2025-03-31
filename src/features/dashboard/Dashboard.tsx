@@ -124,7 +124,7 @@ const Dashboard: React.FC = () => {
                 Orçamentos Recentes
               </Typography>
               <List>
-                {quotes.slice(0, 5).map((quote) => (
+                {quotes.toReversed().slice(0, 5).map((quote) => (
                   <React.Fragment key={quote.id}>
                     <ListItem>
                       <ListItemText
@@ -162,7 +162,7 @@ const Dashboard: React.FC = () => {
                 Clientes Recentes
               </Typography>
               <List>
-                {customers.slice(0, 5).map((customer) => (
+                {customers.toReversed().slice(0, 5).map((customer) => (
                   <React.Fragment key={customer.id}>
                     <ListItem>
                       <ListItemText
