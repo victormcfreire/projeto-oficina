@@ -14,6 +14,7 @@ export const createVehicle = async (marcaVeiculo: string, modeloVeiculo: string,
     return resultado;
   } catch (erro) {
     console.error("Erro ao cadastrar veiculo:", erro);
+    throw new Error("Erro ao criar veículo");
   }
 };
 

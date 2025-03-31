@@ -9,7 +9,6 @@ import {
   Divider,
 } from "@mui/material";
 import { useNavigate, useParams } from "react-router-dom";
-import { useData } from "../../context/DataContext";
 import { Customer, Vehicle } from "../../models/types";
 import{ createCustomer, updateCustomer, getCustomerById } from '../../services/clienteService';
 import Navigation from "../../components/Navigation";
@@ -84,15 +83,19 @@ const CustomerForm = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!validate()) return;
+    try{
+      if ("id" in formData) {
+        await updateCustomer(formData.id, formData.name, formData.email, formData.phone, formData.address, formData.vehicle);
+      } else {
+        await createCustomer(formData.name, formData.email, formData.phone, formData.address, formData.vehicle);
+      }
 
-    if ("id" in formData) {
-      updateCustomer(formData.id, formData.name, formData.email, formData.phone, formData.address, formData.vehicle);
-    } else {
-      createCustomer(formData.name, formData.email, formData.phone, formData.address, formData.vehicle);
+    } catch (error) {
+      console.log(error);
     }
 
     navigate("/customers", { state: { refresh: true } });

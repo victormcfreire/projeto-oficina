@@ -15,17 +15,19 @@ export const createCustomer = async (
   Cliente.set('telefone', telefone);
   Cliente.set('endereco', endereco);
 
-  let veiculoSalvo = await createVehicle(
-    veiculo.make,
-    veiculo.model,
-    veiculo.year,
-    veiculo.vin,
-    veiculo.licensePlate
-  );
-
-  Cliente.set('veiculo', veiculoSalvo);
-
   try {
+    let veiculoSalvo = await createVehicle(
+      veiculo.make,
+      veiculo.model,
+      veiculo.year,
+      veiculo.vin,
+      veiculo.licensePlate
+    );
+
+    if (!veiculoSalvo) throw new Error("Veículo não foi salvo");
+
+    Cliente.set('veiculo', veiculoSalvo);
+
     const resultado = await Cliente.save();
     return resultado;
   } catch (erro) {

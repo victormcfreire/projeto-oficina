@@ -67,8 +67,8 @@ const ServicesList: React.FC = () => {
     setServicos(lista || []);
   };
 
-  const deleteSelectedService = async (service: any) => {
-    await deleteService(service.id);
+  const deleteSelectedService = async (serviceId: string) => {
+    await deleteService(serviceId);
     loadServices();
   };
 
