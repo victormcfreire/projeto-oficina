@@ -19,20 +19,17 @@ import Navigation from '../../components/Navigation';
 
 const CustomersList = () => {
   const [ customers, setCustomers ] = useState<any[]>([]);
-  const [ refresh, setRefresh ] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
 
   useEffect(() => {
     if (location.state?.refresh) {
-      setRefresh((prev) => !prev);
       loadCustomers();
-      navigate(location.pathname, { replace: true, state: {} }); // Reseta o estado para evitar loops
+      navigate(location.pathname, { replace: true, state: {} });
     } else {
       loadCustomers();
     }
-
-  }, [refresh]);
+  }, [location]);
 
   const loadCustomers = async () => {
     const lista = await listCustomers();
